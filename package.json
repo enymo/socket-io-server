@@ -4,7 +4,7 @@
   "description": "Simple socket.io server implementation.",
   "main": "dist/index.js",
   "files": [
-    "dist/index.js"
+    "/dist"
   ],
   "bin": {
     "@enymo/socket-io-server": "./dist/index.js"
