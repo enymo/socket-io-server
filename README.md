@@ -1,3 +1,3 @@
 # Socket IO Server
 
-Work in Progress. Nothing to see here.
+Simple socket.io server implementation.
