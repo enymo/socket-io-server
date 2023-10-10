@@ -84,3 +84,4 @@ app.post("/emit", (req, res) => {
 });
 
 server.listen(Number(process.env.SOCKET_PORT ?? 3000), process.env.SOCKET_HOST ?? "127.0.0.1");
+console.log(`Socket IO Server Version ${process.env.npm_package_version} - Copyright © 2023 enymo GmbH`);
