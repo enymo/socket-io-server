@@ -60,7 +60,7 @@ io.use(async (socket, next) => {
 
 app.use(express.json());
 app.post("/emit", (req, res) => {
-    if (!process.env.SOCKET_API_SECRET || process.env.SOCKET_API_SECRET === req.header("authorization")) {
+    if (!process.env.SOCKET_API_SECRET || `Bearer ${process.env.SOCKET_API_SECRET}` === req.header("authorization")) {
         logger.log("emitting", req.body);
         const {to, event, payload} = req.body;
         if (process.env.SOCKET_ACK_ENDPOINT) {
