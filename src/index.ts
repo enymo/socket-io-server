@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
+import { version } from "../package.json";
 import Logger from "./Logger";
 import { requireEnv } from "./functions";
 
@@ -84,4 +85,4 @@ app.post("/emit", (req, res) => {
 });
 
 server.listen(Number(process.env.SOCKET_PORT ?? 3000), process.env.SOCKET_HOST ?? "127.0.0.1");
-console.log(`Socket IO Server Version ${process.env.npm_package_version} - Copyright © 2023 enymo GmbH`);
+console.log(`Socket IO Server Version ${version} - Copyright © 2023 enymo GmbH`);
