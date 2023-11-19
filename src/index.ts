@@ -77,7 +77,7 @@ app.post("/emit", (req, res) => {
         else {
             io.to(to).emit(event, payload);
         }
-        res.status(202).end();
+        res.status(204).end();
     }
     else {
         res.status(401).end();
