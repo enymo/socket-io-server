@@ -41,11 +41,11 @@ io.use(async (socket, next) => {
         catch (e) {
             if (e instanceof AxiosError) {
                 clientLogger.log("authentication failed");
-                next(new Error("authentication failed"));
+                next(new Error("authentication_failed"));
             }
             else {
                 clientLogger.log("unknown error during authentication");
-                next(new Error("unknown error"));
+                next(new Error("unknown_error"));
             }
         }
     }
@@ -55,7 +55,7 @@ io.use(async (socket, next) => {
     }
     else {
         clientLogger.log("unauthenticated connection rejected");
-        next(new Error("authentication required"));
+        next(new Error("authentication_required"));
     }
 });
 
