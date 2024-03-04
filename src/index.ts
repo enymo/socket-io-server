@@ -37,6 +37,7 @@ io.use(async (socket, next) => {
             clientLogger.log("connection authenticated", response.data);
             socket.join(response.data);
             next();
+            return;
         }
         catch (e) {
             if (e instanceof AxiosError) {
@@ -47,9 +48,13 @@ io.use(async (socket, next) => {
                 clientLogger.log("unknown error during authentication");
                 next(new Error("unknown_error"));
             }
+            if (process.env.SOCKET_UNAUTH_FALLBACK !== "true") {
+                return;
+            }
         }
     }
-    else if (process.env.SOCKET_ALLOW_UNAUTH === "true") {
+
+    if (process.env.SOCKET_ALLOW_UNAUTH === "true") {
         clientLogger.log("unauthenticated connection");
         next();
     }
@@ -80,6 +85,7 @@ app.post("/emit", (req, res) => {
         res.status(204).end();
     }
     else {
+        logger.log("Auth error", process.env.SOCKET_API_SECRET, req.header("authorization"));
         res.status(401).end();
     }
 });
