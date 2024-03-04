@@ -42,15 +42,19 @@ io.use(async (socket, next) => {
         catch (e) {
             if (e instanceof AxiosError) {
                 clientLogger.log("authentication failed");
-                next(new Error("authentication_failed"));
+                if (process.env.SOCKET_UNAUTH_FALLBACK !== "true") {
+                    next(new Error("authentication_failed"));
+                    return;
+                }
             }
             else {
                 clientLogger.log("unknown error during authentication");
-                next(new Error("unknown_error"));
+                if (process.env.SOCKET_UNAUTH_FALLBACK !== "true") {
+                    next(new Error("unknown_error"));
+                    return;
+                }
             }
-            if (process.env.SOCKET_UNAUTH_FALLBACK !== "true") {
-                return;
-            }
+            
         }
     }
 
