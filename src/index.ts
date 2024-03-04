@@ -85,7 +85,7 @@ app.post("/emit", (req, res) => {
         res.status(204).end();
     }
     else {
-        logger.log("Auth error", process.env.SOCKET_API_SECRET, req.header("authorization"));
+        logger.log("unauthenticated emit rejected");
         res.status(401).end();
     }
 });
