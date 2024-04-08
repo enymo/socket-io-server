@@ -68,6 +68,13 @@ io.use(async (socket, next) => {
     }
 });
 
+io.on("connection", socket => {
+    const clientLogger = logger.withId(socket.id);
+    socket.on("disconnect", reason => {
+        clientLogger.log(`disconnected (${reason})`);
+    });
+});
+
 app.use(express.json());
 app.post("/emit", (req, res) => {
     if (!process.env.SOCKET_API_SECRET || `Bearer ${process.env.SOCKET_API_SECRET}` === req.header("authorization")) {
