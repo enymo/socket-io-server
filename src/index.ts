@@ -100,6 +100,26 @@ app.post("/emit", (req, res) => {
         res.status(401).end();
     }
 });
+app.post("/join", (req, res) => {
+    if (!process.env.SOCKET_API_SECRET || `Bearer ${process.env.SOCKET_API_SECRET}` === req.header("authorization")) {
+        logger.log("joining", req.body);
+        const {id, rooms} = req.body;
+        const socket = io.sockets.sockets.get(id);
+        if (socket) {
+            const clientLogger = logger.withId(socket.id);
+            socket.join(rooms);
+            clientLogger.log("joined", rooms);
+        }
+        else {
+            logger.log("socket not found for joining", id);
+        }
+        res.status(204).end();
+    }
+    else {
+        logger.log("unauthenticated join rejected");
+        res.status(401).end();
+    }
+});
 
 server.listen(Number(process.env.SOCKET_PORT ?? 3000), process.env.SOCKET_HOST ?? "127.0.0.1");
 console.log(`Socket IO Server Version ${version} - Copyright © 2023 enymo GmbH`);
