@@ -47,22 +47,26 @@ io.use(async (socket, next) => {
             });
             clientLogger.log("connection authenticated", response.data);
             socket.join(response.data);
-            next(); 
+            next();
+            return; 
         }
         catch (e) {
             if (e instanceof AxiosError) {
                 clientLogger.log("authentication failed");
                 if (!allowUnauth) {
                     next(new Error("authentication_failed"));
+                    return;
                 }
             }
             else {
                 clientLogger.log("unknown error during authentication");
                 next(new Error("unknown_error"));
+                return;
             }
         }
     }
-    else if (allowUnauth) {
+    
+    if (allowUnauth) {
         clientLogger.log("unauthenticated connection");
         next();
     }
