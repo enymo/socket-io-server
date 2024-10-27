@@ -6,11 +6,20 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import { version } from "../package.json";
 import Logger from "./Logger";
-import { requireEnv } from "./functions";
 
 dotenv.config();
 
-const logger = new Logger(process.env.SOCKET_DEBUG === "true");
+const debug = process.env.SOCKET_DEBUG === "true";
+const serveClient = process.env.SOCKET_SERVE_CLIENT === "true";
+const corsOrigins = process.env.SOCKET_CORS_ORIGINS?.split(",");
+const authEndpoint = process.env.SOCKET_AUTH_ENDPOINT;
+const cookieAuth = process.env.SOCKET_COOKIE_AUTH === "true";
+const allowUnauth = process.env.SOCKET_ALLOW_UNAUTH === "true";
+const apiSecret = process.env.SOCKET_API_SECRET;
+const host = process.env.SOCKET_HOST ?? "127.0.0.1";
+const port = process.env.SOCKET_PORT ? Number(process.env.SOCKET_PORT) : 3000;
+
+const logger = new Logger(debug);
 
 if (!process.env.SOCKET_API_SECRET) {
     console.log("WARNING: No API secret set. Authentication disabled.");
@@ -19,46 +28,41 @@ if (!process.env.SOCKET_API_SECRET) {
 const app = express();
 const server = createServer(app);
 const io = new Server(server, {
-    serveClient: process.env.SOCKET_SERVE_CLIENT === "true",
+    serveClient,
     cors: {
-        origin: process.env.SOCKET_CORS_ORIGINS?.split(",")
+        origin: corsOrigins
     }
 });
 
 io.use(async (socket, next) => {
     const clientLogger = logger.withId(socket.id);
-    if (socket.handshake.auth.token) {
+
+    if (authEndpoint && (socket.handshake.auth.token || cookieAuth)) {
         try {
-            const response = await axios.get(requireEnv("SOCKET_AUTH_ENDPOINT"), {
+            const response = await axios.get(authEndpoint, {
                 headers: {
-                    Authorization: `Bearer ${socket.handshake.auth.token}`
+                    Authorization: socket.handshake.auth.token ? `Bearer ${socket.handshake.auth.token}` : undefined,
+                    Cookie: cookieAuth ? socket.handshake.headers.cookie : undefined
                 }
             });
             clientLogger.log("connection authenticated", response.data);
             socket.join(response.data);
-            next();
-            return;
+            next(); 
         }
         catch (e) {
             if (e instanceof AxiosError) {
                 clientLogger.log("authentication failed");
-                if (process.env.SOCKET_UNAUTH_FALLBACK !== "true") {
+                if (!allowUnauth) {
                     next(new Error("authentication_failed"));
-                    return;
                 }
             }
             else {
                 clientLogger.log("unknown error during authentication");
-                if (process.env.SOCKET_UNAUTH_FALLBACK !== "true") {
-                    next(new Error("unknown_error"));
-                    return;
-                }
+                next(new Error("unknown_error"));
             }
-            
         }
     }
-
-    if (process.env.SOCKET_ALLOW_UNAUTH === "true") {
+    else if (allowUnauth) {
         clientLogger.log("unauthenticated connection");
         next();
     }
@@ -76,50 +80,35 @@ io.on("connection", socket => {
 });
 
 app.use(express.json());
-app.post("/emit", (req, res) => {
-    if (!process.env.SOCKET_API_SECRET || `Bearer ${process.env.SOCKET_API_SECRET}` === req.header("authorization")) {
-        logger.log("emitting", req.body);
-        const {to, event, payload} = req.body;
-        if (process.env.SOCKET_ACK_ENDPOINT) {
-            io.timeout(Number(process.env.SOCKET_ACK_TIMEOUT ?? 1000)).to(to).emit(event, payload, (_: Error | null, responses: any[]) => {
-                logger.log("acknowledgements collected", responses);
-                axios.post(process.env.SOCKET_ACK_ENDPOINT!, responses, {
-                    headers: {
-                        Authorization: process.env.SOCKET_API_SECRET ? `Bearer ${process.env.SOCKET_API_SECRET}` : undefined
-                    }
-                });
-            });
-        }
-        else {
-            io.to(to).emit(event, payload);
-        }
-        res.status(204).end();
+app.use((req, res, next) => {
+    if (!apiSecret || `Bearer ${apiSecret}` === req.header("authorization")) {
+        next();
     }
     else {
-        logger.log("unauthenticated emit rejected");
+        logger.log("unauthenticated api call rejected");
         res.status(401).end();
     }
+})
+app.post("/emit", (req, res) => {
+    logger.log("emitting", req.body);
+    const {to, event, payload} = req.body;
+    io.to(to).emit(event, payload);
+    res.status(204).end();
 });
 app.post("/join", (req, res) => {
-    if (!process.env.SOCKET_API_SECRET || `Bearer ${process.env.SOCKET_API_SECRET}` === req.header("authorization")) {
-        logger.log("joining", req.body);
-        const {id, rooms} = req.body;
-        const socket = io.sockets.sockets.get(id);
-        if (socket) {
-            const clientLogger = logger.withId(socket.id);
-            socket.join(rooms);
-            clientLogger.log("joined", rooms);
-        }
-        else {
-            logger.log("socket not found for joining", id);
-        }
-        res.status(204).end();
+    logger.log("joining", req.body);
+    const {id, rooms} = req.body;
+    const socket = io.sockets.sockets.get(id);
+    if (socket) {
+        const clientLogger = logger.withId(socket.id);
+        socket.join(rooms);
+        clientLogger.log("joined", rooms);
     }
     else {
-        logger.log("unauthenticated join rejected");
-        res.status(401).end();
+        logger.log("socket not found for joining", id);
     }
+    res.status(204).end();
 });
 
-server.listen(Number(process.env.SOCKET_PORT ?? 3000), process.env.SOCKET_HOST ?? "127.0.0.1");
+server.listen(port, host);
 console.log(`Socket IO Server Version ${version} - Copyright © 2023 enymo GmbH`);
