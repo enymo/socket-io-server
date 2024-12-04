@@ -43,7 +43,8 @@ io.use(async (socket, next) => {
             const response = await axios.get(authEndpoint, {
                 headers: {
                     Authorization: socket.handshake.auth.token ? `Bearer ${socket.handshake.auth.token}` : undefined,
-                    Cookie: cookieAuth ? socket.handshake.headers.cookie : undefined
+                    Cookie: cookieAuth ? socket.handshake.headers.cookie : undefined,
+                    "X-Xsrf-Token": cookieAuth ? Object.fromEntries(socket.handshake.headers.cookie?.split("; ").map(value => value.split("=")) ?? [])["XSRF-TOKEN"] : undefined
                 }
             });
             clientLogger.log("connection authenticated", response.data);
