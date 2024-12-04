@@ -30,7 +30,8 @@ const server = createServer(app);
 const io = new Server(server, {
     serveClient,
     cors: {
-        origin: corsOrigins
+        origin: corsOrigins,
+        credentials: cookieAuth
     }
 });
 
