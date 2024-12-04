@@ -13,6 +13,7 @@ const debug = process.env.SOCKET_DEBUG === "true";
 const serveClient = process.env.SOCKET_SERVE_CLIENT === "true";
 const corsOrigins = process.env.SOCKET_CORS_ORIGINS?.split(",");
 const authEndpoint = process.env.SOCKET_AUTH_ENDPOINT;
+const origin = process.env.SOCKET_ORIGIN;
 const cookieAuth = process.env.SOCKET_COOKIE_AUTH === "true";
 const allowUnauth = process.env.SOCKET_ALLOW_UNAUTH === "true";
 const apiSecret = process.env.SOCKET_API_SECRET;
@@ -43,7 +44,8 @@ io.use(async (socket, next) => {
             const response = await axios.get(authEndpoint, {
                 headers: {
                     Authorization: socket.handshake.auth.token ? `Bearer ${socket.handshake.auth.token}` : undefined,
-                    Cookie: cookieAuth ? socket.handshake.headers.cookie : undefined
+                    Cookie: cookieAuth ? socket.handshake.headers.cookie : undefined,
+                    Origin: origin || undefined
                 }
             });
             clientLogger.log("connection authenticated", response.data);
