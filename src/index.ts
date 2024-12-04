@@ -113,6 +113,20 @@ app.post("/join", (req, res) => {
     }
     res.status(204).end();
 });
+app.post("/leave", (req, res) => {
+    logger.log("leaving", req.body);
+    const {id, rooms} = req.body;
+    const socket = io.sockets.sockets.get(id);
+    if (socket) {
+        const clientLogger = logger.withId(socket.id);
+        socket.leave(rooms);
+        clientLogger.log("left", rooms);
+    }
+    else {
+        logger.log("socket not found for leaving", id);
+    }
+    res.status(204).end();
+});
 
 server.listen(port, host);
 console.log(`Socket IO Server Version ${version} - Copyright © 2023 enymo GmbH`);
