@@ -21,7 +21,7 @@ const port = process.env.SOCKET_PORT ? Number(process.env.SOCKET_PORT) : 3000;
 
 const logger = new Logger(debug);
 
-if (!process.env.SOCKET_API_SECRET) {
+if (!apiSecret) {
     console.log("WARNING: No API secret set. Authentication disabled.");
 }
 
