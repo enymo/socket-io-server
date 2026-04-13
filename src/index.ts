@@ -44,7 +44,8 @@ io.use(async (socket, next) => {
                 headers: {
                     Authorization: socket.handshake.auth.token ? `Bearer ${socket.handshake.auth.token}` : undefined,
                     Cookie: cookieAuth ? socket.handshake.headers.cookie : undefined,
-                    Origin: cookieAuth ? socket.handshake.headers.origin : undefined
+                    Origin: cookieAuth ? socket.handshake.headers.origin : undefined,
+                    Referer: cookieAuth ? socket.handshake.headers.referer : undefined
                 }
             });
             clientLogger.log("connection authenticated", response.data);

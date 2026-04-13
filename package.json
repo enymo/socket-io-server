@@ -2,8 +2,8 @@
   "name": "@enymo/socket-io-server",
   "version": "2.1.6",
   "description": "Simple socket.io server implementation.",
-  "main": "dist/index.js",
-  "tsup": {
+  "main": "dist/index.cjs",
+  "tsdown": {
     "entry": [
       "src/index.ts"
     ],
@@ -13,11 +13,11 @@
     "/dist"
   ],
   "bin": {
-    "@enymo/socket-io-server": "./dist/index.js"
+    "@enymo/socket-io-server": "./dist/index.cjs"
   },
   "scripts": {
-    "start": "node dist/index.js",
-    "build": "tsup"
+    "start": "node dist/index.cjs",
+    "build": "tsdown"
   },
   "repository": {
     "type": "git",
@@ -32,7 +32,7 @@
   "devDependencies": {
     "@types/express": "^4.17.18",
     "@types/yargs": "^17.0.33",
-    "tsup": "^8.0.0",
+    "tsdown": "^0.21.8",
     "typescript": "^5.2.2"
   },
   "dependencies": {
