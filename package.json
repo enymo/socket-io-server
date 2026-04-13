@@ -1,6 +1,6 @@
 {
   "name": "@enymo/socket-io-server",
-  "version": "2.1.6",
+  "version": "2.1.7",
   "description": "Simple socket.io server implementation.",
   "main": "dist/index.cjs",
   "tsdown": {
